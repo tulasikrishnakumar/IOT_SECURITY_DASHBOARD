@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IEEE Standard Flowchart | IoT Guardian Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body { 
+            background-color: white; 
+            display: flex; 
+            justify-content: center; 
+            padding: 50px; 
+            font-family: "Times New Roman", Times, serif; 
+        }
+        .figure-container { 
+            border: 1px solid #000; 
+            padding: 20px; 
+            width: 100%; 
+            max-width: 600px; 
+        }
+        .caption { 
+            text-align: center; 
+            margin-top: 15px; 
+            font-weight: bold; 
+            font-size: 14px; 
+        }
+    </style>
+</head>
+<body>
+
+<div class="figure-container">
+    <div class="mermaid">
+        graph TD
+            %% DIFFERENTIATED LAYERS
+            subgraph FRONTEND [Frontend: User Interface Layer]
+                A[Initialize Dashboard]
+                B[Interface Selection Dropdown]
+                C[Click 'AUDIT DEVICE']
+                I[Display Security Intelligence]
+            end
+
+            subgraph BACKEND [Backend: Node.js Processing Layer]
+                D[Socket.io Request Handler]
+                E[Nmap Child Process Spawn]
+                F[Data Parsing & JSON Mapping]
+            end
+
+            subgraph EXTERNAL [External: Hardware & Intelligence]
+                G((Network Interface))
+                H[(NIST NVD Database)]
+            end
+
+            %% LINEAR FLOW WITHOUT OVERLAYS
+            A --> B
+            B --> C
+            C -.->|Socket Emission| D
+            D --> E
+            E <==>|SYN Scan| G
+            E --> F
+            F -.->|HTTPS Request| H
+            H -.->|JSON Result| I
+
+            %% IEEE GRAYSCALE STYLING
+            style FRONTEND fill:#ffffff,stroke:#000,stroke-width:2px
+            style BACKEND fill:#f2f2f2,stroke:#000,stroke-width:2px
+            style EXTERNAL fill:#d9d9d9,stroke:#000,stroke-width:2px
+            
+            style A fill:#fff,stroke:#000
+            style G fill:#fff,stroke:#000,stroke-width:3px
+            style H fill:#fff,stroke:#000,stroke-width:3px
+            
+            %% Link Styling
+            linkStyle default stroke:#000,stroke-width:1px;
+    </div>
+    <div class="caption">Fig. 1. Logical Operational Flow of the IoT Security Dashboard</div>
+</div>
+
+<script>
+    mermaid.initialize({
+        theme: 'neutral',
+        startOnLoad: true,
+        flowchart: {
+            curve: 'stepAfter', /* Creates clean 90-degree angles */
+            nodeSpacing: 40,
+            rankSpacing: 50
+        }
+    });
+</script>
+</body>
+</html>

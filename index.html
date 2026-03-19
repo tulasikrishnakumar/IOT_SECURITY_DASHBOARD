@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IOT Security Dashboard | Pro SOC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            /* IEEE Professional Palette */
+            --accent: #212121; 
+            --crit: #b71c1c; 
+            --warn: #616161;
+            --bg: #ffffff; 
+            --sidebar: #f5f5f5;
+            --card: #ffffff;
+            --glass: rgba(0, 0, 0, 0.05);
+            --border: #e0e0e0;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: #212121; 
+            margin: 0; 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        /* Sidebar Navigation */
+        .sidebar { 
+            width: 360px; 
+            background: var(--sidebar); 
+            border-right: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            padding: 0;
+        }
+
+        .sidebar-header {
+            padding: 25px;
+            border-bottom: 2px solid var(--accent);
+            background: #eeeeee;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Main Dashboard Area */
+        .main { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+        }
+
+        .content-area { 
+            flex: 1; 
+            padding: 40px; 
+            overflow-y: auto; 
+            background: #ffffff; 
+        }
+
+        /* Live Terminal Console */
+        .terminal { 
+            height: 220px; 
+            background: #121212; 
+            border-top: 2px solid var(--accent); 
+            font-family: 'Fira Code', monospace; 
+            font-size: 11px; 
+            padding: 15px; 
+            overflow-y: auto; 
+            color: #ffffff; 
+        }
+        .t-cmd { color: #bdbdbd; font-weight: bold; }
+        .t-success { color: #ffffff; border-left: 3px solid #fff; padding-left: 5px; }
+        .t-warn { color: #9e9e9e; font-style: italic; }
+
+        /* Scanned Device Grid */
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); 
+            gap: 25px; 
+            margin-top: 20px;
+        }
+
+        .card { 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            border-radius: 4px; 
+            padding: 24px; 
+            transition: 0.2s ease-in-out; 
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover { 
+            border-color: var(--accent); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .iot-badge { 
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            background: var(--crit); 
+            color: white; 
+            font-size: 10px; 
+            padding: 4px 12px; 
+            font-weight: bold; 
+            border-bottom-left-radius: 0;
+        }
+
+        /* UI Elements */
+        .btn { 
+            border: 1px solid var(--accent); 
+            padding: 10px 18px; 
+            border-radius: 2px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-family: inherit; 
+            font-size: 13px;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+
+        .btn-primary { 
+            background: var(--accent); 
+            color: white; 
+        }
+        
+        .btn-primary:hover {
+            background: #424242;
+        }
+
+        .btn-outline { 
+            background: transparent; 
+            border: 1px solid var(--border); 
+            color: #757575; 
+        }
+
+        .btn-outline:hover { 
+            background: #f5f5f5;
+            color: #212121;
+            border-color: var(--accent);
+        }
+
+        select { 
+            background: #ffffff; 
+            color: #212121; 
+            border: 1px solid var(--border); 
+            padding: 12px; 
+            border-radius: 2px; 
+            width: 100%; 
+            margin-bottom: 20px; 
+            outline: none;
+        }
+
+        /* Intelligence Pop-up Modal */
+        #modal { 
+            display:none; 
+            position:fixed; 
+            top:0; 
+            left:0; 
+            width:100%; 
+            height:100%; 
+            background:rgba(255,255,255,0.95); 
+            z-index:9999; 
+            align-items:center; 
+            justify-content:center; 
+            backdrop-filter: grayscale(1); 
+        }
+
+        .modal-content { 
+            background: #ffffff; 
+            width: 700px; 
+            max-height: 85vh; 
+            border-radius: 0; 
+            border: 3px solid var(--accent); 
+            padding: 40px; 
+            overflow-y: auto; 
+            position: relative; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .service-tag {
+            display: inline-block;
+            background: #eeeeee;
+            color: #212121;
+            padding: 2px 8px;
+            border-radius: 0;
+            font-size: 11px;
+            margin-right: 5px;
+            border: 1px solid var(--border);
+        }
+
+        .vuln-box {
+            background: #f9f9f9;
+            border-left: 6px solid var(--crit);
+            border-top: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 0;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #9e9e9e; border-radius: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2 style="margin:0; color:var(--accent); font-size: 20px; letter-spacing: 0.5px; font-weight: 600;">IOT SECURITY</h2>
+            <p style="margin:5px 0 0 0; font-size: 10px; color: #757575; text-transform: uppercase;">Infrastructure Intelligence Dashboard</p>
+        </div>
+        
+        <div class="sidebar-content">
+            <label style="font-size: 11px; color: #616161; margin-bottom: 8px; display: block; font-weight: 600;">TARGET NETWORK INTERFACE</label>
+            <select id="iface"></select>
+            <button class="btn btn-primary" style="width:100%; margin-bottom: 30px;" onclick="scan()">RUN NETWORK DISCOVERY</button>
+            
+            <h4 style="font-size: 11px; color: #212121; text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 10px;">Live Discovery List</h4>
+            <div id="activeList"></div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="content-area">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
+                <h1 style="font-weight: 600; margin: 0; font-size: 24px; text-transform: uppercase;">Security <span style="font-weight: 300;">Intelligence Grid</span></h1>
+                <div style="display:flex; gap:10px;">
+                    <a href="/export-all" target="_blank" class="btn btn-primary" style="text-decoration:none;">MASTER REPORT (PDF)</a>
+                </div>
+            </div>
+            
+            <div id="scannedList" class="grid"></div>
+        </div>
+
+        <div class="terminal" id="term">
+            <div class="t-cmd">--- GUARDIAN CORE INITIALIZED ---</div>
+            <div>[READY] Awaiting network discovery commands...</div>
+        </div>
+    </div>
+
+    <div id="modal">
+        <div class="modal-content">
+            <button onclick="closeModal()" class="btn btn-outline" style="position:absolute; top:20px; right:20px;">CLOSE [ESC]</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let devices = [];
+
+        // Update Terminal Logs
+        socket.on('terminal', (d) => {
+            const term = document.getElementById('term');
+            const div = document.createElement('div');
+            if (d.type === 'command') div.className = 't-cmd';
+            if (d.type === 'success') div.className = 't-success';
+            if (d.type === 'warning') div.className = 't-warn';
+            div.innerText = d.msg;
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
+        });
+
+        // Load Network Interfaces
+        socket.on('interfaces', (n) => {
+            const list = Object.keys(n).flatMap(k => n[k].filter(a => a.family === 'IPv4').map(a => `<option value="${a.address.split('.').slice(0,3).join('.')}.0/24">${k} (${a.address})</option>`));
+            document.getElementById('iface').innerHTML = list.join('');
+        });
+
+        function scan() { 
+            socket.emit('scanNetwork', document.getElementById('iface').value); 
+        }
+
+        function closeModal() { 
+            document.getElementById('modal').style.display = 'none'; 
+        }
+
+        // Professional Intelligence Dossier Pop-up
+        function showIntelligence(ip) {
+            const d = devices.find(x => x.ip === ip);
+            document.getElementById('modalBody').innerHTML = `
+                <h1 style="color:var(--accent); font-size:32px; margin-bottom:5px; border-bottom: 2px solid #000;">${d.ip}</h1>
+                <p style="color:#616161; margin:10px 0 25px 0; font-size: 14px;">Manufacturer Intelligence: <b>${d.vendor}</b></p>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
+                    <div style="background:#f5f5f5; padding:15px; border: 1px solid #e0e0e0;">
+                        <small style="color:#757575; text-transform:uppercase; font-weight:bold;">Origin</small>
+                        <div style="font-size:14px; margin-top:5px; color:#212121;">${d.macInfo?.country || 'Unknown'}</div>
+                    </div>
+                    <div style="background:#f5f5f5; padding:15px; border: 1px solid #e0e0e0;">
+                        <small style="color:#757575; text-transform:uppercase; font-weight:bold;">Physical MAC</small>
+                        <div style="font-size:14px; margin-top:5px; font-family: 'Fira Code', monospace; color:#212121;">${d.mac}</div>
+                    </div>
+                </div>
+
+                <h3 style="color:var(--crit); border-bottom: 1px solid #e0e0e0; padding-bottom: 10px; text-transform: uppercase; font-size: 14px; font-weight: 800;">NVD Vulnerability Matches (${d.vulns.length})</h3>
+                <div style="max-height:300px; overflow-y:auto; margin-bottom:20px;">
+                    ${d.vulns.map(v => `
+                        <div class="vuln-box">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <b style="color:var(--crit); font-size:16px;">${v.id}</b>
+                                <span style="background:var(--accent); color:#fff; font-size:10px; padding:2px 8px;">${v.severity}</span>
+                            </div>
+                            <p style="font-size:13px; color:#424242; margin-top:10px; line-height:1.5;">${v.desc}</p>
+                        </div>
+                    `).join('') || '<p style="color:#9e9e9e; font-style: italic;">No high-risk CVEs found for this hardware signature.</p>'}
+                </div>
+
+                <div style="background:#f5f5f5; border-left: 5px solid var(--accent); padding:20px;">
+                    <b style="color:var(--accent); text-transform:uppercase; font-size:12px; font-weight: 800;">Security Recommendation:</b>
+                    <p style="font-size:14px; margin-top:10px; line-height:1.6; color:#212121;">${d.patch}</p>
+                </div>
+                
+                <div style="margin-top:30px; display:flex; gap:15px;">
+                    <a href="/export/${d.ip}" target="_blank" class="btn btn-primary" style="flex:1; text-align:center; text-decoration:none;">DOWNLOAD TECHNICAL PDF</a>
+                </div>
+            `;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        // Handle Device List Updates
+        socket.on('updateDevices', (d) => {
+            devices = d;
+            const active = document.getElementById('activeList');
+            const scanned = document.getElementById('scannedList');
+            active.innerHTML = ''; scanned.innerHTML = '';
+
+            d.forEach(dev => {
+                const cardHtml = `
+                    <div class="card">
+                        ${dev.vulns.length > 0 ? '<span class="iot-badge">VULNERABLE</span>' : ''}
+                        <h3 style="margin:0; font-size:22px; font-weight: 600;">${dev.ip}</h3>
+                        <p style="font-size:12px; color:#757575; margin-top:5px; font-weight: 500;">${dev.vendor}</p>
+                        
+                        <div style="margin:20px 0; background:#f9f9f9; border: 1px solid #eee; padding:12px;">
+                            <small style="color:#9e9e9e; display:block; margin-bottom:8px; text-transform:uppercase; font-size:9px; font-weight: bold;">Detected Services</small>
+                            <div>
+                                ${dev.services.map(s => `<span class="service-tag">${s.port} / ${s.name}</span>`).join('') || '<span style="color:#bdbdbd; font-size:11px;">No services found</span>'}
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-primary" style="flex:2" onclick="showIntelligence('${dev.ip}')">INTELLIGENCE</button>
+                            <button class="btn btn-outline" style="flex:1" onclick="socket.emit('removeDevice', '${dev.ip}')">REMOVE</button>
+                        </div>
+                    </div>`;
+
+                if(dev.isScanned) {
+                    scanned.innerHTML += cardHtml;
+                } else {
+                    active.innerHTML += `
+                        <div style="padding:12px; background:#fff; margin-bottom:10px; border: 1px solid #e0e0e0; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:13px; font-weight:600; color: #212121;">${dev.ip}</span>
+                            <button class="btn btn-primary" style="padding:5px 10px; font-size:10px;" onclick="socket.emit('auditDevice', '${dev.ip}')">AUDIT</button>
+                        </div>`;
+                }
+            });
+        });
+
+        // Close modal on ESC key
+        window.onkeydown = (e) => { if(e.keyCode === 27) closeModal(); };
+    </script>
+</body>
+</html>
